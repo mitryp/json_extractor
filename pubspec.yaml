@@ -1,6 +1,6 @@
 name: json_extractor
-description: A minimal library to extract and flatten JSON values
-version: 1.0.0
+description: A minimal library to extract and flatten JSON values according to a user-specified Map schema.
+version: 1.0.1
 homepage: https://github.com/mitryp/json_extractor
 
 environment:

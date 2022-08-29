@@ -12,8 +12,8 @@ Supports nested maps and lists and outputs data as a one-layered Map with a user
 
 ## Getting started
 
-To start, install the package, import JsonExtractor class, and create a [schema](#schema) for it.
-Then, create a JsonExtractor object with the created schema and use its `process` method to extract values:
+To start, install the package, import `JsonExtractor` class, and create a [schema](#schema) for it.
+Then, create a `JsonExtractor` object with the created schema and use its `process` method to extract values:
 
 ```dart
 // prefer the `const` initializing
