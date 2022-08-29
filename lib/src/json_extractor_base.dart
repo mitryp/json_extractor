@@ -84,13 +84,15 @@ class JsonExtractor {
   ///   ]
   /// }
   /// ```
-  Map<String, dynamic> process(dynamic json, {bool includeMissingPathEntries = true}) {
+  Map<String, dynamic> process(dynamic json,
+      {bool includeMissingPathEntries = true}) {
     final res = <String, dynamic>{};
 
     for (final declaration in schema.entries) {
       final resKey = declaration.key;
       final pathSegments = declaration.value.split('.').toList(growable: false);
-      final value = _extractValueFromPath(json, pathSegments, includeMissingPathEntries);
+      final value =
+          _extractValueFromPath(json, pathSegments, includeMissingPathEntries);
 
       if (value != null || includeMissingPathEntries) {
         res[resKey] = value;
@@ -114,8 +116,8 @@ class JsonExtractor {
       }
 
       if (currentLayer is List<Map<String, dynamic>>) {
-        currentLayer = _extractListEntries(
-            currentLayer, pathSegments.sublist(layerIdx), includeMissingPathEntries);
+        currentLayer = _extractListEntries(currentLayer,
+            pathSegments.sublist(layerIdx), includeMissingPathEntries);
         break;
       } else if (currentLayer is Map<String, dynamic>) {
         currentLayer = currentLayer[pathSegment];
@@ -131,10 +133,10 @@ class JsonExtractor {
   /// Recursively extracts values from the list containing Maps<String, dynamic> according to the
   /// remaining path segments obtained from the schema during parsing.
   ///
-  List<dynamic> _extractListEntries(
-      List<Map<String, dynamic>> list, List<String> pathSegments, bool includeMissingPathEntries) {
-    var res =
-        list.map((map) => _extractValueFromPath(map, pathSegments, includeMissingPathEntries));
+  List<dynamic> _extractListEntries(List<Map<String, dynamic>> list,
+      List<String> pathSegments, bool includeMissingPathEntries) {
+    var res = list.map((map) =>
+        _extractValueFromPath(map, pathSegments, includeMissingPathEntries));
 
     if (!includeMissingPathEntries) {
       res = res.where((e) => e != null);
