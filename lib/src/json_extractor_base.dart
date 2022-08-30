@@ -31,7 +31,7 @@ class JsonExtractor {
   ///
   final Map<String, String> schema;
 
-  /// Extract the given Map or List according to this object's schema.
+  /// Extracts the given Map or List according to this object's schema.
   ///
   /// The [includeMissingPathEntries] option defines the object behaviour when parsing schema paths that
   /// do not exist in the processed map. When true, the keys of the missing paths will have the
@@ -84,15 +84,13 @@ class JsonExtractor {
   ///   ]
   /// }
   /// ```
-  Map<String, dynamic> process(dynamic json,
-      {bool includeMissingPathEntries = true}) {
+  Map<String, dynamic> process(dynamic json, {bool includeMissingPathEntries = true}) {
     final res = <String, dynamic>{};
 
     for (final declaration in schema.entries) {
       final resKey = declaration.key;
       final pathSegments = declaration.value.split('.').toList(growable: false);
-      final value =
-          _extractValueFromPath(json, pathSegments, includeMissingPathEntries);
+      final value = _extractValueFromPath(json, pathSegments, includeMissingPathEntries);
 
       if (value != null || includeMissingPathEntries) {
         res[resKey] = value;
@@ -100,6 +98,19 @@ class JsonExtractor {
     }
 
     return res;
+  }
+
+  /// Extracts the list of Maps or List according to the [schema] of this [JsonExtractor].
+  ///
+  /// Applies the schema to each entry of the [jsonList].
+  ///
+  /// Returns a list of the extracted maps.
+  ///
+  List<Map<String, dynamic>> processList(List<dynamic> jsonList,
+      {bool includeMissingPathEntries = true}) {
+    return jsonList
+        .map((json) => process(json, includeMissingPathEntries: includeMissingPathEntries))
+        .toList();
   }
 
   /// Extracts the value which is located among the specified path in the given map.
@@ -116,8 +127,8 @@ class JsonExtractor {
       }
 
       if (currentLayer is List<Map<String, dynamic>>) {
-        currentLayer = _extractListEntries(currentLayer,
-            pathSegments.sublist(layerIdx), includeMissingPathEntries);
+        currentLayer = _extractListEntries(
+            currentLayer, pathSegments.sublist(layerIdx), includeMissingPathEntries);
         break;
       } else if (currentLayer is Map<String, dynamic>) {
         currentLayer = currentLayer[pathSegment];
@@ -133,10 +144,10 @@ class JsonExtractor {
   /// Recursively extracts values from the list containing Maps<String, dynamic> according to the
   /// remaining path segments obtained from the schema during parsing.
   ///
-  List<dynamic> _extractListEntries(List<Map<String, dynamic>> list,
-      List<String> pathSegments, bool includeMissingPathEntries) {
-    var res = list.map((map) =>
-        _extractValueFromPath(map, pathSegments, includeMissingPathEntries));
+  List<dynamic> _extractListEntries(
+      List<Map<String, dynamic>> list, List<String> pathSegments, bool includeMissingPathEntries) {
+    var res =
+        list.map((map) => _extractValueFromPath(map, pathSegments, includeMissingPathEntries));
 
     if (!includeMissingPathEntries) {
       res = res.where((e) => e != null);
