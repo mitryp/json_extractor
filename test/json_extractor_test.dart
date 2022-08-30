@@ -160,7 +160,9 @@ void main() {
       'batterTypes': ex2['batters']['batter'].map((map) => map['type']).toList()
     };
 
-    final toppingIds = {'toppingIds': ex2['topping'].map((map) => map['id']).toList()};
+    final toppingIds = {
+      'toppingIds': ex2['topping'].map((map) => map['id']).toList()
+    };
 
     test('"batter types" extracted correctly', () {
       const extractor = JsonExtractor({'batterTypes': 'batters.batter.type'});
@@ -179,9 +181,10 @@ void main() {
     test('multiple keys are extracted correctly', () {
       final matcher = {
         'itemIds': ex3['items'].map((map) => map['item']['id']),
-        'itemBatters': ex3['items'].map((map) => map['item']['batters']['batter']),
-        'itemBatterTypes':
-            ex3['items'].map((map) => map['item']['batters']['batter'].map((bMap) => bMap['type'])),
+        'itemBatters':
+            ex3['items'].map((map) => map['item']['batters']['batter']),
+        'itemBatterTypes': ex3['items'].map((map) =>
+            map['item']['batters']['batter'].map((bMap) => bMap['type'])),
         'missingField': []
       };
 
@@ -207,7 +210,8 @@ void main() {
 
       const extractor = JsonExtractor(clearKwdPostSchema);
 
-      final res = Map.of(testMap)..update('posts', (value) => extractor.processList(value));
+      final res = Map.of(testMap)
+        ..update('posts', (value) => extractor.processAsList(value));
 
       expect(res, testMapMatcher);
     });
@@ -220,11 +224,13 @@ void main() {
 
       const extractor = JsonExtractor(colorNameSchema);
 
-      expect(extractor.processList(ex1), ex1Matcher);
+      expect(extractor.processAsList(ex1), ex1Matcher);
     });
 
     // uses the ex3
-    test('extract a list of data according to the schema [{...item1}, {...item2}]', () {
+    test(
+        'extract a list of data according to the schema [{...item1}, {...item2}]',
+        () {
       const itemsSchema = {
         // todo make it useful and not making rewrite all map by hand
         'id': 'item.id',
@@ -234,13 +240,18 @@ void main() {
         'batters': 'item.batters',
         'topping': 'item.topping'
       };
-
       const extractor = JsonExtractor(itemsSchema);
-      final res = extractor.processList(ex3['items']);
+      final res = extractor.processAsList(ex3['items']);
+
+      const itemsSchemaNew = {'...item': 'item'};
+      const extractorNew = JsonExtractor(itemsSchemaNew);
+      final resNew = extractorNew.processAsList(ex3['items']);
 
       final itemsMatcher = [for (final item in ex3['items']) item['item']];
 
-      expect(res, itemsMatcher); // same
+      expect(res,
+          resNew); // extraction implementation should be equal to the old one
+      expect(resNew, itemsMatcher); // and they both should work correctly
     });
   });
 }
