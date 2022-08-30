@@ -1,3 +1,7 @@
+[![Dart Tests](https://github.com/mitryp/json_extractor/actions/workflows/dart_tests.yml/badge.svg?branch=master)](https://github.com/mitryp/json_extractor/actions/workflows/dart_tests.yml)
+[![pub package](https://img.shields.io/pub/v/json_extractor.svg)](https://pub.dev/packages/json_extractor)
+[![package publisher](https://img.shields.io/pub/publisher/json_extractor.svg)](https://pub.dev/packages/json_extractor/publisher)
+
 ### Extracting nested JSON values
 
 `json_extractor` is a miniature library providing the functionality of schema-driven extracting and flattening JSON values.
