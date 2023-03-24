@@ -50,7 +50,36 @@ const schema = {
 final pastry = const JsonExtractor(schema).process(pastryMap);
 ```
 
-More detailed example can be found in the `example/json_extractor_example.dart` file.
+### JSON Arrays
+REST APIs often supply JSON arrays to represent a collection of records. `JsonExtractor` can be used to extract values
+from arrays using `processAsList` method of the extractor. It takes a List<dynamic> and applies the schema to each of
+the elements in the list. It returns a list of the extracted maps:
+```dart
+const data = [
+  {
+    'id': 1,
+    'name': {'name': 'Dmytro', 'nickname': 'mitryp'},
+  },
+  {
+    'id': 2,
+    'name': {'name': 'Kateryna', 'nickname': 'kathalie'},
+  },
+];
+
+extractor.processAsList(data); // [{id: 1, nickname: mitryp}, {id: 2, nickname: kathalie}]
+```
+
+Consider a situation in which you need to extract only a list of values and don't need a map at all. In this case,
+`extract: true` option can be used as follows:
+```dart
+// using the data from previous example
+const extractor = JsonExtractor('anything': 'name.nickname'}); // instead of 'anything' can be literally anything 
+                                                               // as this key will be extracted
+
+extractor.processAsList(data, extract: true); // [mitryp, kathalie]
+```
+
+More examples can be found in the `example/json_extractor_example.dart` file.
 
 ## Schema
 

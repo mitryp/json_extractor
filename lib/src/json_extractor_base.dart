@@ -15,8 +15,6 @@ class JsonExtractor {
   ///
   const JsonExtractor(this.schema);
 
-  static const listSpreadMark = '...';
-
   /// A schema of the Map values to be extracted.
   ///
   /// The schema is a Map<String, String>, that has the following structure:
@@ -35,13 +33,31 @@ class JsonExtractor {
 
   /// Extracts the given Map or List according to this object's schema.
   ///
-  /// The [includeMissingPathEntries] option defines the object behaviour when parsing schema paths that
-  /// do not exist in the processed map. When true, the keys of the missing paths will have the
-  /// value of null. When false, the resulting map will not contain keys that have the value of
-  /// null (unless that values are included in an object that was not parsed). By default, true.
+  /// The [includeMissingPathEntries] option defines the object behaviour when
+  /// parsing schema paths that do not exist in the processed map. When true,
+  /// the keys of the missing paths will have the value of null. When false,
+  /// the resulting map will not contain keys that have the value of null
+  /// (unless that values are included in an object that was not parsed).
+  /// By default, true.
   ///
-  /// When the map includes internal list of maps, they are processed recursively according to the
-  /// schema path reminder applied to the maps inside the list.
+  /// When the resulting map contains only one key-value pair, it may be
+  /// more convenient to extract the value and remove unnecessary nesting.
+  /// To do it, the [extract] option is used.
+  /// When is set to `true`, the value of the only key of the resulting map will
+  /// be returned instead of the map.
+  /// > Note that if the quantity of the declarations in the schema is not equal
+  ///   to **1**, setting the `spread` to true will cause ArgumentError.
+  /// By default, false.
+  ///
+  /// Returns the `dynamic` type by default, but the return type can be specified
+  /// as a type parameter of the method.
+  /// > At the same time, the type parameter *should not contain specified
+  ///   internal types*. For example, use `process<List>(...)` when you expect to
+  ///   get any list from a json.
+  ///
+  /// When the map includes internal list of maps, they are processed
+  /// recursively according to the schema path reminder applied to the maps
+  /// inside the list.
   ///
   /// For example, imagine having a map of the following structure:
   /// ```dart
@@ -86,8 +102,14 @@ class JsonExtractor {
   ///   ]
   /// }
   /// ```
-  Map<String, dynamic> process(dynamic json,
-      {bool includeMissingPathEntries = true}) {
+  T process<T extends dynamic>(dynamic json,
+      {bool includeMissingPathEntries = true, bool extract = false}) {
+    if (extract && schema.length != 1) {
+      throw ArgumentError('When using `extract = true` option, the schema '
+          'must contain exactly one declaration, which will be extracted as a '
+          'result; it had ${schema.length} declarations instead');
+    }
+
     final res = <String, dynamic>{};
 
     for (final declaration in schema.entries) {
@@ -101,11 +123,11 @@ class JsonExtractor {
       }
     }
 
-    if (schema.length == 1 && schema.keys.first.startsWith(listSpreadMark)) {
-      return res[schema.keys.first];
+    if (extract) {
+      return res[schema.keys.first] as T;
     }
 
-    return res;
+    return res as T;
   }
 
   /// Extracts the list of Maps or List according to the [schema] of this [JsonExtractor].
@@ -114,11 +136,19 @@ class JsonExtractor {
   ///
   /// Returns a list of the extracted maps.
   ///
-  List<Map<String, dynamic>> processAsList(List<dynamic> jsonList,
-      {bool includeMissingPathEntries = true}) {
+  /// The expected type of the list elements can be specified with a type
+  /// parameter (some limitations apply, see [process] method documentation for
+  /// reference).
+  ///
+  /// The [includeMissingPathEntries] and [extract] options do the same as the
+  /// same options in the [process] method.
+  ///
+  List<T> processAsList<T extends dynamic>(List<dynamic> jsonList,
+      {bool includeMissingPathEntries = true, bool extract = false}) {
     return jsonList
-        .map((json) =>
-            process(json, includeMissingPathEntries: includeMissingPathEntries))
+        .map((json) => process<T>(json,
+            includeMissingPathEntries: includeMissingPathEntries,
+            extract: extract))
         .toList();
   }
 
@@ -135,7 +165,7 @@ class JsonExtractor {
         break;
       }
 
-      if (currentLayer is List<Map<String, dynamic>>) {
+      if (currentLayer is List) {
         currentLayer = _extractListEntries(currentLayer,
             pathSegments.sublist(layerIdx), includeMissingPathEntries);
         break;
@@ -153,7 +183,7 @@ class JsonExtractor {
   /// Recursively extracts values from the list containing Maps<String, dynamic> according to the
   /// remaining path segments obtained from the schema during parsing.
   ///
-  List<dynamic> _extractListEntries(List<Map<String, dynamic>> list,
+  List<dynamic> _extractListEntries(List<dynamic> list,
       List<String> pathSegments, bool includeMissingPathEntries) {
     var res = list.map((map) =>
         _extractValueFromPath(map, pathSegments, includeMissingPathEntries));

@@ -201,7 +201,7 @@ void main() {
     });
   });
 
-  group('processList() works correctly', () {
+  group('`processAsList` works correctly', () {
     test('clear unwanted nesting from the map {..., posts: [{id: id}]}', () {
       const clearKwdPostSchema = {'id': 'post.id'};
 
@@ -231,27 +231,57 @@ void main() {
     test(
         'extract a list of data according to the schema [{...item1}, {...item2}]',
         () {
-      const itemsSchema = {
-        // todo make it useful and not making rewrite all map by hand
-        'id': 'item.id',
-        'type': 'item.type',
-        'name': 'item.name',
-        'ppu': 'item.ppu',
-        'batters': 'item.batters',
-        'topping': 'item.topping'
-      };
-      const extractor = JsonExtractor(itemsSchema);
-      final res = extractor.processAsList(ex3['items']);
-
-      const itemsSchemaNew = {'...item': 'item'};
-      const extractorNew = JsonExtractor(itemsSchemaNew);
-      final resNew = extractorNew.processAsList(ex3['items']);
+      const itemsSchemaNew = {'...': 'item'};
+      const extractor = JsonExtractor(itemsSchemaNew);
+      final res = extractor.processAsList<Map>(ex3['items'], extract: true);
 
       final itemsMatcher = [for (final item in ex3['items']) item['item']];
 
-      expect(res,
-          resNew); // extraction implementation should be equal to the old one
-      expect(resNew, itemsMatcher); // and they both should work correctly
+      expect(res, itemsMatcher);
+    });
+  });
+
+  group('`spread` option works correctly', () {
+    test('{..., posts: [{id: id}, ...]}', () {
+      const clearKwdPostSchema = {'id': 'post.id'};
+
+      final testMapMatcher = Map.of(testMap)
+        ..update('posts', (list) => list.map((e) => e['post']).toList());
+
+      const extractor = JsonExtractor(clearKwdPostSchema);
+
+      final res = Map.of(testMap)
+        ..update('posts', (value) => extractor.processAsList(value));
+
+      expect(res, testMapMatcher);
+    });
+
+    // uses the ex1
+    test('extract a list of maps {colors: [colorName0, colorName1, ...]}', () {
+      const colorNameSchema = {'colors': 'color'};
+      final nonExtractMatcher = {
+        'colors': ex1.map((e) => e['color']).toList()
+      }; // {colors: [list of color names]}
+      final extractMatcher =
+          nonExtractMatcher.values.first; // [list of color names]
+
+      const extractor = JsonExtractor(colorNameSchema);
+
+      expect(extractor.process(ex1), nonExtractMatcher);
+      expect(extractor.process(ex1, extract: true), extractMatcher);
+    });
+
+    // uses the ex3
+    test(
+        'extract a list of data according to the schema '
+        '[{...item1}, {...item2}]', () {
+      const itemsSchemaNew = {'items': 'item'};
+      const extractor = JsonExtractor(itemsSchemaNew);
+      final res = extractor.process<List>(ex3['items'], extract: true);
+
+      final itemsMatcher = [for (final item in ex3['items']) item['item']];
+
+      expect(res, itemsMatcher);
     });
   });
 }
