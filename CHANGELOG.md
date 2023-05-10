@@ -20,3 +20,7 @@
 
 - Raised the maximum Dart SDK version to support Dart 3.
 - Added the issue tracker link to the pubspec file.
+
+## 1.1.2
+
+- Fixed some mistakes in the README.

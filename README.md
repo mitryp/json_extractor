@@ -20,7 +20,7 @@ To start, install the package, import `JsonExtractor` class, and create a [schem
 Then, create a `JsonExtractor` object with the created schema and use its `process` method to extract values:
 
 ```dart
-// prefer the `const` initializing
+// prefer constant initialization
 const extractor = JsonExtractor(schema);
 final res = extractor.process(json);
 ```
@@ -66,16 +66,16 @@ const data = [
   },
 ];
 
+const extractor = JsonExtractor({'id': 'id', 'nickname': 'name.nickname'});
 extractor.processAsList(data); // [{id: 1, nickname: mitryp}, {id: 2, nickname: kathalie}]
 ```
 
 Consider a situation in which you need to extract only a list of values and don't need a map at all. In this case,
 `extract: true` option can be used as follows:
 ```dart
-// using the data from previous example
-const extractor = JsonExtractor('anything': 'name.nickname'}); // instead of 'anything' can be literally anything 
-                                                               // as this key will be extracted
-
+const extractor = JsonExtractor({'anything': 'name.nickname'}); // instead of 'anything' can be literally anything 
+                                                                // as this key will be extracted
+// using the data from the previous example
 extractor.processAsList(data, extract: true); // [mitryp, kathalie]
 ```
 
@@ -90,8 +90,6 @@ Paths are the keywords divided by the dots: `key1.key2.key3...`.
 
 The keywords can lead through nested maps and lists: `mapKey.listKey.innerMapKey...`.
 
-## Docs
-More detailed documentation can be found [here](https://pub.dev/documentation/json_extractor/latest/).
 
 ## Issues and improvement suggestions
 
