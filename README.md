@@ -11,6 +11,7 @@ Supports nested maps and lists and outputs data as a one-layered Map with a user
 
 * Extracting deeply nested maps and lists in any nesting order.
 * Simple path-like schemas: `user_names: users.user.name`.
+* List indices and escaping: `first_tag: tags[0]`, `major: version\.major`.
 * Compile-time constant reusable JsonExtractor instances.
 * Simple flat maps with only needed data as a result.
 
@@ -52,7 +53,7 @@ final pastry = const JsonExtractor(schema).process(pastryMap);
 
 ### JSON Arrays
 REST APIs often supply JSON arrays to represent a collection of records. `JsonExtractor` can be used to extract values
-from arrays using `processAsList` method of the extractor. It takes a List<dynamic> and applies the schema to each of
+from arrays using `processAsList` method of the extractor. It takes a `List<dynamic>` and applies the schema to each of
 the elements in the list. It returns a list of the extracted maps:
 ```dart
 const data = [
@@ -88,8 +89,38 @@ values in the processed maps.
 
 Paths are the keywords divided by the dots: `key1.key2.key3...`.
 
-The keywords can lead through nested maps and lists: `mapKey.listKey.innerMapKey...`.
+The keywords can lead through nested maps and lists: `mapKey.listKey.innerMapKey...`. When a path reaches a list, the
+rest of the path is applied to each of its elements.
 
+A list element can be selected by its index: `items[0].id`, `matrix[1][0]`. A segment consisting only of an index
+indexes the current value, e.g. `[0]` for a top-level list.
+
+Use `\.`, `\[` and `\\` to include a literal `.`, `[` or `\` in a key: `r'version\.major'` reads the `version.major`
+key.
+
+## Missing values
+
+A path is missing when a key is absent, an index is out of range, or a value along the path is not a map or a list.
+Missing paths produce `null`. The following options of `process` and `processAsList` change that:
+
+* `includeMissingPathEntries: false` omits keys with null values from the result and removes nulls from extracted lists.
+* `keepNullsInLists: true` keeps the nulls in extracted lists, so that lists extracted from the same records stay
+  index-aligned, while still omitting null top-level keys.
+* `strict: true` throws a `FormatException` describing the unresolved path instead. A `null` value along the path is
+  not considered missing.
+
+Default values for the null results can be provided per schema key:
+
+```dart
+const extractor = JsonExtractor(
+  {'name': 'user.name', 'tags': 'user.tags'},
+  defaults: {'name': 'anonymous', 'tags': []},
+);
+extractor.process({'user': {}}); // {name: anonymous, tags: []}
+```
+
+When using `extract: true` with a non-nullable type argument, such as `process<List>(...)`, a null result throws a
+`FormatException`. Use a nullable type argument (`process<List?>(...)`) or a default value.
 
 ## Issues and improvement suggestions
 
